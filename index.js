@@ -10,6 +10,7 @@ import {
   addUser,
   getGenAge,
   findUser,
+  saveStory,
 } from "./mongoMethods.js";
 import { storyGenerator } from "./llm.js";
 
@@ -97,8 +98,11 @@ app.post("/addUser", async (req, res) => {
       name: req.body.name,
       age: req.body.age,
       gender: req.body.gender,
+      country: req.body.country,
+      genre: req.body.genre,
     };
     await addUser(data);
+    res.status(200).send("User added");
   } catch (err) {
     console.log(`Error while adding user - ${err}`);
     res.status(500).send(`Internal Server Error`);
@@ -112,11 +116,23 @@ app.post("/story", async (req, res) => {
     const { gender, age } = await getGenAge(email);
     //provide genre or character like action or kindness
     const genre = req.body.genre;
-    const prompt = `Write a story of ${genre} for age group ${age} for ${gender}`;
+    const language = req.body.language;
+    const prompt = `Write a story of ${genre} for age group ${age} for ${gender} in ${language} language`;
     const story = await storyGenerator(prompt);
     res.status(200).json(story);
   } catch (err) {
     console.log(`Error while generating story ${err}`);
+    res.status(500).send(`Internal server error`);
+  }
+});
+
+app.post("/publish", async (req, res) => {
+  try {
+    const story = req.body.story;
+    await saveStory(story);
+    res.status(200).send(`Story saved`);
+  } catch (err) {
+    console.log(`Internal server error`);
     res.status(500).send(`Internal server error`);
   }
 });

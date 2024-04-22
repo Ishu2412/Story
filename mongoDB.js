@@ -7,8 +7,10 @@ const storySchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema({
   name: String,
+  password: String,
   age: Number,
   gender: String,
+  country: String,
   email: String,
   interestedGenre: [String],
   publishedStories: [storySchema],

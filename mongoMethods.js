@@ -22,6 +22,7 @@ async function closeConnection() {
   }
 }
 
+//registering new user
 async function registerUser(data) {
   try {
     const user = new UserData(data);
@@ -32,6 +33,8 @@ async function registerUser(data) {
   }
 }
 
+
+//adding user details in the db
 async function addUser(data) {
   try {
     const user = await UserData.findOne({ email: data.email });
@@ -39,6 +42,7 @@ async function addUser(data) {
       user.gender = data.gender;
       user.age = data.age;
       user.name = data.name;
+      user.interestedGenre = data.genre;
       await user.save();
       console.log("User data updated:", user);
     } else {
@@ -59,6 +63,8 @@ async function addUser(data) {
 //   }
 // }
 
+
+//getting particular user age and gender
 async function getGenAge(email) {
   try {
     const user = await UserData.findOne({ email: email });
@@ -68,14 +74,24 @@ async function getGenAge(email) {
   }
 }
 
-async function findUser(email) {
+//finding user in db
+async function findUser(data) {
   try {
-    const user = await UserData.findOne({ email: email });
+    const user = await UserData.findOne({ email: data.email });
     if (user) return user;
     else return user;
   } catch (err) {
     console.log(`Error while finding the user`);
     return null;
+  }
+}
+
+//saving story for particular user
+async function saveStory(data){
+  try{
+    const 
+  }catch(err){
+    console.log(`Error while saving the story to db`);
   }
 }
 

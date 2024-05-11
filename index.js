@@ -11,6 +11,7 @@ import {
   getGenAge,
   findUser,
   saveStory,
+  findStories,
 } from "./mongoMethods.js";
 import { storyGenerator } from "./llm.js";
 
@@ -100,6 +101,7 @@ app.post("/addUser", async (req, res) => {
       gender: req.body.gender,
       country: req.body.country,
       genre: req.body.genre,
+      publicImage: req.body.publicImage,
     };
     await addUser(data);
     res.status(200).send("User added");
@@ -109,8 +111,20 @@ app.post("/addUser", async (req, res) => {
   }
 });
 
-//generate story
-app.post("/story", async (req, res) => {
+// getting profile of the user
+app.post("/profile", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await findUser(email);
+    res.status(200).json(user);
+  } catch (err) {
+    console.log(`Error while getting profile ${err}`);
+    res.status(500).send(`Internal server error`);
+  }
+});
+
+//generate story through AI
+app.post("/storyai", async (req, res) => {
   try {
     const email = req.body.email;
     const { gender, age } = await getGenAge(email);
@@ -119,6 +133,12 @@ app.post("/story", async (req, res) => {
     const language = req.body.language;
     const prompt = `Write a story of ${genre} for age group ${age} for ${gender} in ${language} language`;
     const story = await storyGenerator(prompt);
+    const data = {
+      story: story,
+      likes: 0,
+      aigenerated: true,
+    };
+    await saveStory(data);
     res.status(200).json(story);
   } catch (err) {
     console.log(`Error while generating story ${err}`);
@@ -126,13 +146,77 @@ app.post("/story", async (req, res) => {
   }
 });
 
+//publishing user stories
 app.post("/publish", async (req, res) => {
   try {
-    const story = req.body.story;
-    await saveStory(story);
+    const email = req.body.email;
+    const data = {
+      story: req.body.story,
+      images: req.body.images,
+      videos: req.body.videos,
+      audio: req.body.audio,
+      genre: req.body.genre,
+      likes: 0,
+      aigenerated: false,
+      writer: email,
+    };
+    await saveStory(data);
     res.status(200).send(`Story saved`);
   } catch (err) {
     console.log(`Internal server error`);
+    res.status(500).send(`Internal server error`);
+  }
+});
+
+//getting stories on the basis of genre
+app.post("/getStories", async (req, res) => {
+  try {
+    const genre = req.body.genre;
+    const stories = await findStories(genre);
+    res.status(200).json(stories);
+  } catch (err) {
+    console.log(`Error while getting stories ${err}`);
+    res.status(500).send(`Internal server error`);
+  }
+});
+
+//verifying user as writer
+app.post("/verify", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await findUser(email);
+    user.isWriter = true;
+    await user.save();
+  } catch (err) {
+    console.log(`Error while verifying the user ${err}`);
+    res.status(500).send(`Internal server error`);
+  }
+});
+
+//check verificatoin of user for writer
+app.post("/is-verified", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await findUser(email);
+    if (user.isWriter) {
+      res.status(200).send(`Verified`);
+    } else {
+      res.status(401).send(`Not verified`);
+    }
+  } catch (err) {
+    console.log(`Error while verifying the user ${err}`);
+    res.status(500).send(`Internal server error`);
+  }
+});
+
+app.post("/generate-quiz", async (req, res) => {
+  try {
+    const story = req.body.story;
+    const genre = req.body.genre;
+    const prompt = `Write a quiz based on the story for checking did the child get the moral for ${genre}: ${story}`;
+    const quiz = await storyGenerator(prompt);
+  } catch (err) {
+    console.log(`Error while generating the quiz ${err}`);
     res.status(500).send(`Internal server error`);
   }
 });

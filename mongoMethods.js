@@ -1,4 +1,4 @@
-import { UserData } from "./mongoDB.js";
+import { UserData, StoryData } from "./mongoDB.js";
 import mongoose from "mongoose";
 
 const uri =
@@ -33,7 +33,6 @@ async function registerUser(data) {
   }
 }
 
-
 //adding user details in the db
 async function addUser(data) {
   try {
@@ -42,7 +41,7 @@ async function addUser(data) {
       user.gender = data.gender;
       user.age = data.age;
       user.name = data.name;
-      user.interestedGenre = data.genre;
+      user.country = data.country;
       await user.save();
       console.log("User data updated:", user);
     } else {
@@ -62,7 +61,6 @@ async function addUser(data) {
 //     console.error(`Error while adding new user ${err}`);
 //   }
 // }
-
 
 //getting particular user age and gender
 async function getGenAge(email) {
@@ -87,12 +85,31 @@ async function findUser(data) {
 }
 
 //saving story for particular user
-async function saveStory(data){
-  try{
-    const 
-  }catch(err){
+async function saveStory(data) {
+  try {
+    const story = new StoryData(data);
+    await story.save();
+  } catch (err) {
     console.log(`Error while saving the story to db`);
   }
 }
 
-export { connect, closeConnection, addUser, getGenAge, findUser, registerUser };
+async function findStories(genre) {
+  try {
+    const stories = await StoryData.find({ genre: genre });
+    return stories;
+  } catch (err) {
+    console.log(`Error while finding the stories ${err}`);
+  }
+}
+
+export {
+  connect,
+  closeConnection,
+  addUser,
+  getGenAge,
+  findUser,
+  registerUser,
+  findStories,
+  saveStory,
+};

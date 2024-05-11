@@ -77,7 +77,7 @@ async function findUser(data) {
   try {
     const user = await UserData.findOne({ email: data.email });
     if (user) return user;
-    else return user;
+    else return false;
   } catch (err) {
     console.log(`Error while finding the user`);
     return null;

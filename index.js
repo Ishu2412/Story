@@ -35,7 +35,11 @@ app.post("/register", async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
-    const check = await findUser(email);
+    const data = {
+      email,
+      password,
+    };
+    const check = await findUser(data);
     console.log(email);
     console.log(password);
 
@@ -100,7 +104,6 @@ app.post("/addUser", async (req, res) => {
       age: req.body.age,
       gender: req.body.gender,
       country: req.body.country,
-      genre: req.body.genre,
       publicImage: req.body.publicImage,
     };
     await addUser(data);
@@ -115,7 +118,8 @@ app.post("/addUser", async (req, res) => {
 app.post("/profile", async (req, res) => {
   try {
     const email = req.body.email;
-    const user = await findUser(email);
+    const data = { email: email };
+    const user = await findUser(data);
     res.status(200).json(user);
   } catch (err) {
     console.log(`Error while getting profile ${err}`);
@@ -131,12 +135,13 @@ app.post("/storyai", async (req, res) => {
     //provide genre or character like action or kindness
     const genre = req.body.genre;
     const language = req.body.language;
-    const prompt = `Write a story of ${genre} for age group ${age} for ${gender} in ${language} language`;
+    const prompt = `Write a story of ${genre} for age group of ${age} for ${gender} in ${language} language`;
     const story = await storyGenerator(prompt);
     const data = {
       story: story,
       likes: 0,
       aigenerated: true,
+      genre: genre,
     };
     await saveStory(data);
     res.status(200).json(story);
@@ -169,7 +174,7 @@ app.post("/publish", async (req, res) => {
 });
 
 //getting stories on the basis of genre
-app.post("/getStories", async (req, res) => {
+app.post("/get-stories", async (req, res) => {
   try {
     const genre = req.body.genre;
     const stories = await findStories(genre);

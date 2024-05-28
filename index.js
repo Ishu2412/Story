@@ -104,7 +104,7 @@ app.post("/addUser", async (req, res) => {
       age: req.body.age,
       gender: req.body.gender,
       country: req.body.country,
-      publicImage: req.body.publicImage,
+      publicImage: req.body.publicImage || null,
     };
     await addUser(data);
     res.status(200).send("User added");
@@ -127,15 +127,25 @@ app.post("/profile", async (req, res) => {
   }
 });
 
+function generatePrompt(genre, age, language, gender) {
+  return `generate a kid's story of age ${age} based on ${genre} in ${language} language with 
+    refrences from hindhu mythology and be very descriptive but with 
+    kid's grammar so children can understand
+    and return the story as a dictionary in the structure 
+    { "story" [" the story as a whole"]
+        "moral" [" the moral of the story"]
+    }`;
+}
+
 //generate story through AI
 app.post("/storyai", async (req, res) => {
   try {
     const email = req.body.email;
-    const { gender, age } = await getGenAge(email);
+    const { gender = "male", age = 10 } = await getGenAge(email);
     //provide genre or character like action or kindness
     const genre = req.body.genre;
     const language = req.body.language;
-    const prompt = `Write a story of ${genre} for age group of ${age} for ${gender} in ${language} language`;
+    const prompt = generatePrompt(genre, age, language, gender);
     const story = await storyGenerator(prompt);
     const data = {
       story: story,
@@ -156,11 +166,11 @@ app.post("/publish", async (req, res) => {
   try {
     const email = req.body.email;
     const data = {
-      story: req.body.story,
-      images: req.body.images,
-      videos: req.body.videos,
-      audio: req.body.audio,
-      genre: req.body.genre,
+      story: req.body.story || null,
+      images: req.body.images || null,
+      videos: req.body.videos || null,
+      audio: req.body.audio || null,
+      genre: req.body.genre || null,
       likes: 0,
       aigenerated: false,
       writer: email,
@@ -189,7 +199,8 @@ app.post("/get-stories", async (req, res) => {
 app.post("/verify", async (req, res) => {
   try {
     const email = req.body.email;
-    const user = await findUser(email);
+    const data = { email: email };
+    const user = await findUser(data);
     user.isWriter = true;
     await user.save();
   } catch (err) {
@@ -202,7 +213,8 @@ app.post("/verify", async (req, res) => {
 app.post("/is-verified", async (req, res) => {
   try {
     const email = req.body.email;
-    const user = await findUser(email);
+    const data = { email: email };
+    const user = await findUser(data);
     if (user.isWriter) {
       res.status(200).send(`Verified`);
     } else {
@@ -214,12 +226,25 @@ app.post("/is-verified", async (req, res) => {
   }
 });
 
+function generate_quiz_prompt(story, genre) {
+  return `generate a quiz based on the story ${story} to check if the child got the moral of the story for ${genre} 
+    in the format {"question 1":
+    "question": "what is the moral of the story",
+    ["options"]
+    ["answer"]
+    "question 2":
+    "question": "Do he have to do this",
+    ["options"]["answer"]}
+    }`;
+}
+
 app.post("/generate-quiz", async (req, res) => {
   try {
     const story = req.body.story;
     const genre = req.body.genre;
-    const prompt = `Write a quiz based on the story for checking did the child get the moral for ${genre}: ${story}`;
+    const prompt = generate_quiz_prompt(story, genre);
     const quiz = await storyGenerator(prompt);
+    res.status(200).json(quiz);
   } catch (err) {
     console.log(`Error while generating the quiz ${err}`);
     res.status(500).send(`Internal server error`);

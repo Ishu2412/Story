@@ -94,9 +94,9 @@ async function saveStory(data) {
   }
 }
 
-async function findStories(genre) {
+async function findStories() {
   try {
-    const stories = await StoryData.find({ genre: genre });
+    const stories = await StoryData.find();
     return stories;
   } catch (err) {
     console.log(`Error while finding the stories ${err}`);

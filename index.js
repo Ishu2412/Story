@@ -147,7 +147,11 @@ app.post("/storyai", async (req, res) => {
     const language = req.body.language;
     const prompt = generatePrompt(genre, age, language, gender);
     const story = await storyGenerator(prompt);
+    const title = await storyGenerator(
+      `generate a title for this story - ${story}`
+    );
     const data = {
+      title: title,
       story: story,
       likes: 0,
       aigenerated: true,
@@ -166,6 +170,7 @@ app.post("/publish", async (req, res) => {
   try {
     const email = req.body.email;
     const data = {
+      title: req.body.title,
       story: req.body.story || null,
       images: req.body.images || null,
       videos: req.body.videos || null,
@@ -186,8 +191,8 @@ app.post("/publish", async (req, res) => {
 //getting stories on the basis of genre
 app.post("/get-stories", async (req, res) => {
   try {
-    const genre = req.body.genre;
-    const stories = await findStories(genre);
+    // const genre = req.body.genre;
+    const stories = await findStories();
     res.status(200).json(stories);
   } catch (err) {
     console.log(`Error while getting stories ${err}`);
